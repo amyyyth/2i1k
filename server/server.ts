@@ -57,21 +57,6 @@ io.on("connection", (socket) => {
     callback({ success: true, roomCode });
   });
 
-//   socket.on("join-room", (roomCode: string, callback) => {
-//     if (!rooms[roomCode]) {
-//       rooms[roomCode] = { users: [], content: "", currentController: null };
-//     }
-
-//     const room = rooms[roomCode];
-//     if (room.users.length >= 2) {
-//       io.emit("room-full");
-//     }
-//     room.users.push(socket.id);
-//     if (room.currentController === null) room.currentController = socket.id;
-
-//     socket.join(roomCode);
-//     io.to(roomCode).emit("room-update", room);
-//   });
 
   socket.on("join-room", (roomCode, callback) => {
     // Check if room exists
@@ -93,7 +78,6 @@ io.on("connection", (socket) => {
     socket.join(roomCode);
     callback({ success: true });
     io.to(roomCode).emit("room-update", room);
-    console.log(rooms)
   });
 
   socket.on("leave-room", (roomCode, callback) => {
@@ -141,7 +125,6 @@ io.on("connection", (socket) => {
   );
 
   socket.on("switch-control", (roomCode: string) => {
-    console.log("switch", roomCode)
     const room = rooms[roomCode];
     if (room) {
       const currentIndex = room.users.indexOf(room.currentController!);
