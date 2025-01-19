@@ -141,6 +141,7 @@ io.on("connection", (socket) => {
   );
 
   socket.on("switch-control", (roomCode: string) => {
+    console.log("switch", roomCode)
     const room = rooms[roomCode];
     if (room) {
       const currentIndex = room.users.indexOf(room.currentController!);

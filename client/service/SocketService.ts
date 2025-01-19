@@ -54,7 +54,28 @@ class SocketService {
     });
   }
 
-  setConnectedRoom(roomCode: string) {
+  contentUpdate(content: string) {
+    try{
+      this.getSocket().emit("content-change", {
+        roomCode: this.connectedRoom,
+        content: content,
+      });
+    }
+    catch(err){
+      console.log(err)
+    }
+  }
+
+  switchControl() {
+    try{
+      this.getSocket().emit("switch-control", this.connectedRoom);
+    }
+    catch(err){
+      console.log(err)
+    }
+  }
+
+  setConnectedRoom(roomCode: string | null) {
     this.connectedRoom = roomCode;
   }
 

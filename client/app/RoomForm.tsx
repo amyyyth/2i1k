@@ -26,7 +26,9 @@ export const RoomForm = () => {
     });
 
     return () => {
-      SocketService.getInstance().disconnect();
+      //  removing this because the connection has to be there when routing
+      // rooms page
+      //   SocketService.getInstance().disconnect();
     };
   }, []);
 
@@ -36,38 +38,11 @@ export const RoomForm = () => {
       setInputError(true);
       return;
     }
-    try {
-        const result = await SocketService.getInstance().joinRoom(
-          (roomCode as string).toUpperCase()
-        );
-        if (result.success) {
-          console.log("connected to ", roomCode);
-          SocketService.getInstance().setConnectedRoom(roomCode);
-          router.push(`/room/${roomCode}`)
-          // handle connected
-        } else {
-          console.log(result.error || "Failed to join room here");
-        }
-      } catch (err) {
-        console.log(err)
-        console.log("Failed to join room");
-      }
+    router.push(`/room/${roomCode}`)
   };
 
   const handleCreateRoom = async () => {
-    try {
-        console.log(SocketService.getInstance().getConnectedRoom())
-      const result = await SocketService.getInstance().createRoom();
-      if (result.success && result.roomCode) {
-        console.log("room created ", result.roomCode);
-        SocketService.getInstance().setConnectedRoom(result.roomCode);
-        router.push(`/room/${result.roomCode}`)
-      } else {
-        console.log(result.error || "Failed to create room");
-      }
-    } catch (err) {
-      console.log("Failed to create room");
-    }
+    router.push('room/new')
   };
 
   return (
