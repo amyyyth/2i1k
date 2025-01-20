@@ -1,13 +1,14 @@
 import sanitizeHtml from "sanitize-html";
 
 const defaultOptions: sanitizeHtml.IOptions = {
-    // disallowedTagsMode: 'discard' as DisallowedTagsModes,
-    allowedTags: sanitizeHtml.defaults.allowedTags.filter((tag) => tag !== "pre").concat("code"),
+    allowedTags: sanitizeHtml.defaults.allowedTags.filter((tag) => tag !== "pre").concat("img","code"),
     allowedAttributes: {
         a: ["href"],
+        img: ["src", "alt", "width", "height"],
     },
     allowedIframeHostnames: ["www.youtube.com"],
 };
+
 const handleLineEndings = (html: string) => {
     return html.replace(/<pre>([\s\S]*?)<\/pre>/g, (match, p1) => {
         return `<pre>${p1.replace(/\n+/g, '<br>')}</pre>`;

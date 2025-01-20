@@ -8,7 +8,7 @@ export interface QuestionData {
 }
 
 async function getQuestionSlugFromUrl(url: string): Promise<string | null> {
-  const regex = /leetcode\.com\/problems\/([\w-]+)\//;
+  const regex = /leetcode\.com\/problems\/([\w-]+)(\/|$)/;
   const match = url.match(regex);
   return match ? match[1] : null;
 }

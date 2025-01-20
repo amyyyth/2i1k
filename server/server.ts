@@ -120,13 +120,13 @@ app.get("/rooms", (req: Request, res: Response) => {
 });
 
 app.post("/question", async (req: Request, res: Response) => {
-    console.log(req.body.slug)
+  console.log(req.body.slug);
   const questionData = await fetchQuestionData(req.body.slug);
   if (!questionData) {
     res.json({
       success: false,
     });
-    return
+    return;
   }
   res.json({ success: true, question: questionData });
 });
@@ -134,7 +134,12 @@ app.post("/question", async (req: Request, res: Response) => {
 io.on("connection", (socket) => {
   socket.on("create-room", (callback) => {
     const roomCode = getUniqueRoomCode();
-    rooms[roomCode] = { users: [], content: "", currentController: null, questionData: null };
+    rooms[roomCode] = {
+      users: [],
+      content: "",
+      currentController: null,
+      questionData: null,
+    };
     const room = rooms[roomCode];
     room.users.push(socket.id);
     if (room.currentController === null) room.currentController = socket.id;
@@ -211,7 +216,6 @@ io.on("connection", (socket) => {
     ({ roomCode, question }: { roomCode: string; question: QuestionData }) => {
       if (rooms[roomCode]) {
         rooms[roomCode].questionData = question;
-        console.log(rooms[roomCode])
         socket.to(roomCode).emit("update-question", question);
       }
     }

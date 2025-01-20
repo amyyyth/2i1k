@@ -57,9 +57,6 @@ export default function RootLayout({
               </div> */}
             {children}
           </main>
-          <footer className="sticky bottom-0 flex gap-6 flex-wrap items-center justify-center">
-            This is a work under progress. Don't judge pls.
-          </footer>
         </ThemeProvider>
         <Toaster />
       </body>
