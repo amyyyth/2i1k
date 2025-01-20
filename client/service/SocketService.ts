@@ -57,6 +57,8 @@ class SocketService {
 
   contentUpdate(content: string) {
     try{
+      console.log("emit")
+      console.log(content)
       this.getSocket().emit("content-change", {
         roomCode: this.connectedRoom,
         content: content,
@@ -72,6 +74,18 @@ class SocketService {
       this.getSocket().emit("question-change", {
         roomCode: this.connectedRoom,
         question: question,
+      });
+    }
+    catch(err){
+      console.log(err)
+    }
+  }
+
+  langChange(lang: string) {
+    try{
+      this.getSocket().emit("lang-change", {
+        roomCode: this.connectedRoom,
+        lang: lang,
       });
     }
     catch(err){

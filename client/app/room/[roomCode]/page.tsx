@@ -13,6 +13,15 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { getLeetCodeQuestion, QuestionData } from "@/service/LeetCodeService";
 import SocketService from "@/service/SocketService";
@@ -29,6 +38,7 @@ export const RoomPage = () => {
     content: string;
     currentController: string | null;
     questionData: QuestionData | null;
+    currentLang: string;
   };
 
   const [isInControl, setIsInControl] = useState(true);
@@ -40,6 +50,7 @@ export const RoomPage = () => {
   const [questionUrl, setQuestionUrl] = useState<string | null>(null);
   const [showQuestionDialog, setShowQuestionDialog] = useState(false);
   const [fetchingQuestion, setFetchingQuestion] = useState(false);
+  const [language, setLanguage] = useState("python");
 
   const { toast } = useToast();
   const router = useRouter();
@@ -94,7 +105,8 @@ export const RoomPage = () => {
       socket.on("room-update", (room: RoomData) => {
         setControl(room.currentController as string);
         setContent(room.content as string);
-        setQuestionData(room.questionData)
+        setQuestionData(room.questionData);
+        setLanguage(room.currentLang);
       });
 
       socket.on("control-update", (controllerId: string) => {
@@ -102,11 +114,18 @@ export const RoomPage = () => {
       });
 
       socket.on("update-content", (content: string) => {
+        console.log("receive");
+        console.log(content);
         setContent(content);
       });
 
       socket.on("update-question", (questionData: QuestionData) => {
         setQuestionData(questionData);
+      });
+
+      socket.on("update-lang", (lang: string) => {
+        console.log(lang);
+        setLanguage(lang);
       });
 
       return () => {
@@ -131,8 +150,10 @@ export const RoomPage = () => {
   };
 
   const handleInputChange = (val: string) => {
-    setContent(val);
-    SocketService.getInstance().contentUpdate(val);
+    if (isInControl) {
+      SocketService.getInstance().contentUpdate(content);
+      setContent(val);
+    }
   };
 
   const handleFetchQuestion = async (e: FormEvent) => {
@@ -143,8 +164,17 @@ export const RoomPage = () => {
     if (res && res.success && res.question) {
       setQuestionData(res.question);
       SocketService.getInstance().questionUpdate(res.question);
-      console.log(res.question.content)
       setShowQuestionDialog(false);
+      console.log(res.question.codeSnippets);
+      setLanguage("python");
+      const codeSnippet = res.question.codeSnippets.find(
+        (snippet) => snippet.langSlug === "python"
+      );
+      if (codeSnippet) {
+        setContent(codeSnippet.code);
+        SocketService.getInstance().langChange("python");
+        SocketService.getInstance().contentUpdate(codeSnippet.code);
+      }
     } else if (res && !res.success && res.error) {
       toast({
         title: "Failed to fetch question",
@@ -162,6 +192,21 @@ export const RoomPage = () => {
 
   const handleChangeQuestion = async () => {
     setShowQuestionDialog(true);
+  };
+
+  const handleLangChange = (val: string) => {
+    setLanguage(val);
+    if (isInControl) {
+      SocketService.getInstance().langChange(val);
+      const codeSnippet = questionData?.codeSnippets.find(
+        (snippet) => snippet.langSlug === val
+      );
+      if (codeSnippet) {
+        setContent(codeSnippet.code);
+        console.log("langchange", val);
+        SocketService.getInstance().contentUpdate(codeSnippet.code);
+      }
+    }
   };
 
   return (
@@ -196,7 +241,7 @@ export const RoomPage = () => {
               </div>
               <div className="flex">
                 <div className="p-2 mr-4">
-                  Connected to{" "}
+                  Connected to Room:{" "}
                   <span className="font-bold">
                     {" "}
                     {SocketService.getInstance().getConnectedRoom()}
@@ -214,28 +259,58 @@ export const RoomPage = () => {
               <div className="border col-span-5 p-4">
                 <SanitizeHTML html={questionData?.content || ""} />
               </div>
-              <div
-                className="border col-span-7"
-                onKeyUp={(e: React.KeyboardEvent<HTMLInputElement>) => {
-                  handleKeyDown(e);
-                }}
-              >
-                <Editor
-                  height="100%"
-                  language="javascript"
-                  theme="vs-dark"
-                  value={content}
-                  options={{
-                    inlineSuggest: { enabled: true },
-                    fontSize: 16,
-                    formatOnType: true,
-                    autoClosingBrackets: "always",
-                    readOnly: !isInControl,
-                    autoClosingQuotes: "always",
+              <div className="border col-span-7 grid grid-rows-[3_1fr]">
+                <div className="flex align-middle justify-end">
+                  <div className="p-4">Select language:</div>
+                  <div className="p-3">
+                    <Select
+                      value={language}
+                      onValueChange={(val) => handleLangChange(val)}
+                      disabled={!isInControl}
+                    >
+                      <SelectTrigger className="w-[120px]">
+                        <SelectValue placeholder="Select language" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectGroup>
+                          <SelectLabel>Language</SelectLabel>
+                          <SelectItem value="python">Python</SelectItem>
+                          <SelectItem value="python3">Python3</SelectItem>
+                          <SelectItem value="cpp">C++</SelectItem>
+                          <SelectItem value="java">Java</SelectItem>
+                          <SelectItem value="javascript">JavaScript</SelectItem>
+                          <SelectItem value="typescript">TypeScript</SelectItem>
+                          <SelectItem value="ruby">Ruby</SelectItem>
+                          <SelectItem value="golang">Go</SelectItem>
+                          <SelectItem value="rust">Rust</SelectItem>
+                          <SelectItem value="csharp">C#</SelectItem>
+                          <SelectItem value="c">C</SelectItem>
+                        </SelectGroup>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div
+                  onKeyUp={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                    handleKeyDown(e);
                   }}
-                  onChange={(e) => handleInputChange(e as string)}
-                  className={isInControl ? "" : "opacity-30"}
-                />
+                >
+                  <Editor
+                    language={language === "golang"? "go" : language === "python3" ? "python" : language}
+                    theme="vs-dark"
+                    value={content}
+                    options={{
+                      inlineSuggest: { enabled: true },
+                      fontSize: 16,
+                      formatOnType: true,
+                      autoClosingBrackets: "always",
+                      readOnly: !isInControl,
+                      autoClosingQuotes: "always",
+                    }}
+                    onChange={(e) => handleInputChange(e as string)}
+                    className={isInControl ? "" : "opacity-30"}
+                  />
+                </div>
               </div>
             </div>
           </div>

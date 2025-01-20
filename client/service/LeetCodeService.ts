@@ -1,10 +1,16 @@
 import { backendUri } from "@/config";
 
 export interface QuestionData {
+  frontendQuestionId: string;
   title: string;
-  content: string;
+  titleSlug: string;
   difficulty: string;
-  // Add other fields as needed
+  content: string;
+  codeSnippets: Array<{
+    code: string,
+    lang: string,
+    langSlug: string
+  }>
 }
 
 async function getQuestionSlugFromUrl(url: string): Promise<string | null> {

@@ -20,16 +20,23 @@ type RoomData = {
   content: string;
   currentController: string | null;
   questionData: QuestionData | null;
+  currentLang: string;
 };
 
 const rooms: Record<string, RoomData> = {};
 const LEETCODE_GRAPHQL_URL = "https://leetcode.com/graphql";
 
 interface QuestionData {
+  frontendQuestionId: string;
   title: string;
-  content: string;
+  titleSlug: string;
   difficulty: string;
-  // Add other fields as needed
+  content: string;
+  codeSnippets: Array<{
+    code: string;
+    lang: string;
+    langSlug: string;
+  }>;
 }
 
 // Generate random 6-letter room code
@@ -55,9 +62,17 @@ async function fetchQuestionData(slug: string): Promise<QuestionData | null> {
   const query = `
         query getQuestionDetail($titleSlug: String!) {
             question(titleSlug: $titleSlug) {
+                frontendQuestionId: questionFrontendId
                 title
+                titleSlug
+                codeSnippets {
+                    code
+                    lang
+                    langSlug
+                }
                 content
                 difficulty
+
             }
         }
     `;
@@ -92,13 +107,15 @@ async function fetchQuestionData(slug: string): Promise<QuestionData | null> {
     }
 
     const data = await response.json();
-
     const question = data.data.question;
     if (question) {
       return {
+        frontendQuestionId: question.frontendQuestionId,
         title: question.title,
         content: question.content,
         difficulty: question.difficulty,
+        titleSlug: question.titleSlug,
+        codeSnippets: question.codeSnippets,
         // Map other fields as needed
       };
     } else {
@@ -139,6 +156,7 @@ io.on("connection", (socket) => {
       content: "",
       currentController: null,
       questionData: null,
+      currentLang: "python",
     };
     const room = rooms[roomCode];
     room.users.push(socket.id);
@@ -217,6 +235,16 @@ io.on("connection", (socket) => {
       if (rooms[roomCode]) {
         rooms[roomCode].questionData = question;
         socket.to(roomCode).emit("update-question", question);
+      }
+    }
+  );
+  socket.on(
+    "lang-change",
+    ({ roomCode, lang }: { roomCode: string; lang: string }) => {
+      if (rooms[roomCode]) {
+        rooms[roomCode].currentLang = lang;
+        const room = rooms[roomCode];
+        socket.to(roomCode).emit("update-lang", lang);
       }
     }
   );
