@@ -1,5 +1,6 @@
 // socketService.ts
 import { io, Socket } from "socket.io-client";
+import { QuestionData } from "./LeetCodeService";
 
 class SocketService {
   private socket: Socket | null = null;
@@ -59,6 +60,18 @@ class SocketService {
       this.getSocket().emit("content-change", {
         roomCode: this.connectedRoom,
         content: content,
+      });
+    }
+    catch(err){
+      console.log(err)
+    }
+  }
+  
+  questionUpdate(question: QuestionData) {
+    try{
+      this.getSocket().emit("question-change", {
+        roomCode: this.connectedRoom,
+        question: question,
       });
     }
     catch(err){

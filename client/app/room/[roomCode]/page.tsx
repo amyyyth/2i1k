@@ -8,7 +8,7 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle
+  DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,7 +20,7 @@ import Editor from "@monaco-editor/react";
 import { LogOut, RefreshCcwDot, SendHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 
 export const RoomPage = () => {
   const { roomCode } = useParams();
@@ -28,6 +28,7 @@ export const RoomPage = () => {
     users: string[];
     content: string;
     currentController: string | null;
+    questionData: QuestionData | null;
   };
 
   const [isInControl, setIsInControl] = useState(true);
@@ -54,9 +55,6 @@ export const RoomPage = () => {
   };
 
   useEffect(() => {
-    if(!questionData){
-      setShowQuestionDialog(true)
-    }
     try {
       const socket = SocketService.getInstance().connect();
       if (!roomCode || roomCode === "new") {
@@ -71,6 +69,7 @@ export const RoomPage = () => {
             }
           })
           .then(() => {
+            setShowQuestionDialog(true);
             setLoading(false);
           });
       } else {
@@ -80,7 +79,6 @@ export const RoomPage = () => {
             if (result.success) {
               console.log("connected to ", roomCode);
               SocketService.getInstance().setConnectedRoom(roomCode as string);
-              // handle connected
             } else {
               SocketService.getInstance().setConnectedRoom(null);
               setRoomError(true);
@@ -96,6 +94,7 @@ export const RoomPage = () => {
       socket.on("room-update", (room: RoomData) => {
         setControl(room.currentController as string);
         setContent(room.content as string);
+        setQuestionData(room.questionData)
       });
 
       socket.on("control-update", (controllerId: string) => {
@@ -104,6 +103,10 @@ export const RoomPage = () => {
 
       socket.on("update-content", (content: string) => {
         setContent(content);
+      });
+
+      socket.on("update-question", (questionData: QuestionData) => {
+        setQuestionData(questionData);
       });
 
       return () => {
@@ -132,17 +135,17 @@ export const RoomPage = () => {
     SocketService.getInstance().contentUpdate(val);
   };
 
-  const handleFetchQuestion = async () => {
+  const handleFetchQuestion = async (e: FormEvent) => {
+    e.preventDefault();
     setFetchingQuestion(true);
-    const res = await getLeetCodeQuestion(
-      questionUrl || ""
-    );
+    const res = await getLeetCodeQuestion(questionUrl || "");
     setFetchingQuestion(false);
     if (res && res.success && res.question) {
       setQuestionData(res.question);
-      setShowQuestionDialog(false)
+      SocketService.getInstance().questionUpdate(res.question);
+      console.log(res.question.content)
+      setShowQuestionDialog(false);
     } else if (res && !res.success && res.error) {
-      console.log("err");
       toast({
         title: "Failed to fetch question",
         description: res.error,
@@ -245,30 +248,35 @@ export const RoomPage = () => {
             <DialogHeader>
               <DialogTitle>Enter LeetCode question url</DialogTitle>
               <DialogDescription className="text-xs">
-                (something like: https://leetcode.com/problems/two-sum/description/)
+                (something like:
+                https://leetcode.com/problems/two-sum/description/)
               </DialogDescription>
             </DialogHeader>
-            <div className="flex items-center space-x-2">
-              <div className="grid flex-1 gap-2">
-                <Label htmlFor="link" className="sr-only">
-                  Link
-                </Label>
-                <Input
-                  id="link"
-                  placeholder=""
-                  onChange={(e: ChangeEvent<HTMLInputElement>) => setQuestionUrl(e.target.value)}
-                />
+            <form onSubmit={(e: FormEvent) => handleFetchQuestion(e)}>
+              <div className="flex items-center space-x-2">
+                <div className="grid flex-1 gap-2">
+                  <Label htmlFor="link" className="sr-only">
+                    Link
+                  </Label>
+                  <Input
+                    id="link"
+                    placeholder=""
+                    onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                      setQuestionUrl(e.target.value)
+                    }
+                  />
+                </div>
+                <Button
+                  size="sm"
+                  className="px-3"
+                  type="submit"
+                  disabled={fetchingQuestion}
+                >
+                  <span className="sr-only">Fetch</span>
+                  {fetchingQuestion ? <LoadingSpinner /> : <SendHorizontal />}
+                </Button>
               </div>
-              <Button size="sm" className="px-3" onClick={handleFetchQuestion} disabled={fetchingQuestion}>
-                <span className="sr-only">Fetch</span>
-                {
-                  fetchingQuestion ?
-                  <LoadingSpinner />
-                  :
-                  <SendHorizontal />
-                }
-              </Button>
-            </div>
+            </form>
           </DialogContent>
         </Dialog>
       </div>

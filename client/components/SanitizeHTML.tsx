@@ -1,18 +1,24 @@
 import sanitizeHtml from "sanitize-html";
 
-const defaultOptions = {
-//   allowedTags: ["b", "i", "em", "strong", "a", "pre", "code", "sup"],
-  allowedAttributes: {
-    a: ["href"],
-  },
-  allowedIframeHostnames: ["www.youtube.com"],
+const defaultOptions: sanitizeHtml.IOptions = {
+    // disallowedTagsMode: 'discard' as DisallowedTagsModes,
+    allowedTags: sanitizeHtml.defaults.allowedTags.filter((tag) => tag !== "pre").concat("code"),
+    allowedAttributes: {
+        a: ["href"],
+    },
+    allowedIframeHostnames: ["www.youtube.com"],
+};
+const handleLineEndings = (html: string) => {
+    return html.replace(/<pre>([\s\S]*?)<\/pre>/g, (match, p1) => {
+        return `<pre>${p1.replace(/\n+/g, '<br>')}</pre>`;
+    });
 };
 
 const sanitize = (
   dirty: string,
   options: sanitizeHtml.IOptions | undefined
 ) => ({
-  __html: sanitizeHtml(dirty, { ...defaultOptions, ...options }),
+  __html: sanitizeHtml(handleLineEndings(dirty), { ...defaultOptions, ...options }),
 });
 
 interface SanitizeHTMLProps {
