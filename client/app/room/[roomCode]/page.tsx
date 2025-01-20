@@ -1,9 +1,23 @@
 "use client";
+// I KNOW THIS PAGE IS TOO CLUTTERED!
+// PARDON ME CODE LORDS, THIS WHOLE THING WAS DONE IN UNDER 24HRS WHILE I WAS SLEEP DEPRIVED
+import { SanitizeHTML } from "@/components/SanitizeHTML";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useToast } from "@/hooks/use-toast";
+import { getLeetCodeQuestion, QuestionData } from "@/service/LeetCodeService";
 import SocketService from "@/service/SocketService";
+import Editor from "@monaco-editor/react";
+import { LogOut, RefreshCcwDot, SendHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ChangeEvent, useEffect, useState } from "react";
@@ -21,6 +35,10 @@ export const RoomPage = () => {
   const [loading, setLoading] = useState(true);
   const [roomError, setRoomError] = useState(false);
   const [roomErrorMsg, setRoomErrorMsg] = useState("");
+  const [questionData, setQuestionData] = useState<QuestionData | null>(null);
+  const [questionUrl, setQuestionUrl] = useState<string | null>(null);
+  const [showQuestionDialog, setShowQuestionDialog] = useState(false);
+  const [fetchingQuestion, setFetchingQuestion] = useState(false);
 
   const { toast } = useToast();
   const router = useRouter();
@@ -36,6 +54,9 @@ export const RoomPage = () => {
   };
 
   useEffect(() => {
+    if(!questionData){
+      setShowQuestionDialog(true)
+    }
     try {
       const socket = SocketService.getInstance().connect();
       if (!roomCode || roomCode === "new") {
@@ -73,8 +94,8 @@ export const RoomPage = () => {
       }
 
       socket.on("room-update", (room: RoomData) => {
-        console.log(room);
         setControl(room.currentController as string);
+        setContent(room.content as string);
       });
 
       socket.on("control-update", (controllerId: string) => {
@@ -96,12 +117,13 @@ export const RoomPage = () => {
   }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === " " || e.key === "Enter") {
-      console.log("emittt");
+    if (
+      e.key === " " ||
+      e.key === "Enter" ||
+      e.key === "Backspace" ||
+      e.key === "Delete"
+    ) {
       SocketService.getInstance().switchControl();
-    }
-    if (e.key === "Enter") {
-      console.log("enter pressed");
     }
   };
 
@@ -110,9 +132,38 @@ export const RoomPage = () => {
     SocketService.getInstance().contentUpdate(val);
   };
 
+  const handleFetchQuestion = async () => {
+    setFetchingQuestion(true);
+    const res = await getLeetCodeQuestion(
+      questionUrl || ""
+    );
+    setFetchingQuestion(false);
+    if (res && res.success && res.question) {
+      setQuestionData(res.question);
+      setShowQuestionDialog(false)
+    } else if (res && !res.success && res.error) {
+      console.log("err");
+      toast({
+        title: "Failed to fetch question",
+        description: res.error,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Failed to fetch question",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleChangeQuestion = async () => {
+    setShowQuestionDialog(true);
+  };
+
   return (
     <>
-      <div className="flex flex-col min-h-screen items-center justify-center">
+      <div className="flex flex-col min-h-screen h-screen items-center justify-center">
         {loading ? (
           <LoadingSpinner size={50} />
         ) : roomError ? (
@@ -125,27 +176,101 @@ export const RoomPage = () => {
             </Link>
           </>
         ) : (
-          <div className="">
-            <div className="text-3xl mb-4">
-              Connected to{" "}
-              <span className="font-bold">
-                {SocketService.getInstance().getConnectedRoom()}
-              </span>
+          <div className="w-screen h-full">
+            <div className="h-16 border-b flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="p-4 mr-4 text-2xl font-bold">
+                  {questionData?.title || "Question title here"}
+                </div>
+                <Button
+                  variant={"outline"}
+                  className="mr-4"
+                  onClick={handleChangeQuestion}
+                >
+                  <RefreshCcwDot />
+                  Change
+                </Button>
+              </div>
+              <div className="flex">
+                <div className="p-2 mr-4">
+                  Connected to{" "}
+                  <span className="font-bold">
+                    {" "}
+                    {SocketService.getInstance().getConnectedRoom()}
+                  </span>
+                </div>
+                <Link href={"/"}>
+                  <Button variant={"outline"} className="mr-4">
+                    <LogOut />
+                    Leave
+                  </Button>
+                </Link>
+              </div>
             </div>
-            <Input
-              placeholder="content here"
-              value={content}
-              onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                handleInputChange(e.target.value)
-              }
-              onKeyDown={(e: React.KeyboardEvent<HTMLInputElement>) =>
-                handleKeyDown(e)
-              }
-              readOnly={!isInControl}
-              className={"focus:ring-0 "+(!isInControl ? "bg-red-400 bg-opacity-20" : "")}
-            />
+            <div className="h-full grid gap-2 grid-cols-12">
+              <div className="border col-span-5 p-4">
+                <SanitizeHTML html={questionData?.content || ""} />
+              </div>
+              <div
+                className="border col-span-7"
+                onKeyUp={(e: React.KeyboardEvent<HTMLInputElement>) => {
+                  handleKeyDown(e);
+                }}
+              >
+                <Editor
+                  height="100%"
+                  language="javascript"
+                  theme="vs-dark"
+                  value={content}
+                  options={{
+                    inlineSuggest: { enabled: true },
+                    fontSize: 16,
+                    formatOnType: true,
+                    autoClosingBrackets: "always",
+                    readOnly: !isInControl,
+                    autoClosingQuotes: "always",
+                  }}
+                  onChange={(e) => handleInputChange(e as string)}
+                  className={isInControl ? "" : "opacity-30"}
+                />
+              </div>
+            </div>
           </div>
         )}
+        <Dialog
+          open={showQuestionDialog}
+          onOpenChange={(open) => setShowQuestionDialog(open)}
+        >
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Enter LeetCode question url</DialogTitle>
+              <DialogDescription className="text-xs">
+                (something like: https://leetcode.com/problems/two-sum/description/)
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex items-center space-x-2">
+              <div className="grid flex-1 gap-2">
+                <Label htmlFor="link" className="sr-only">
+                  Link
+                </Label>
+                <Input
+                  id="link"
+                  placeholder=""
+                  onChange={(e: ChangeEvent<HTMLInputElement>) => setQuestionUrl(e.target.value)}
+                />
+              </div>
+              <Button size="sm" className="px-3" onClick={handleFetchQuestion} disabled={fetchingQuestion}>
+                <span className="sr-only">Fetch</span>
+                {
+                  fetchingQuestion ?
+                  <LoadingSpinner />
+                  :
+                  <SendHorizontal />
+                }
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </>
   );

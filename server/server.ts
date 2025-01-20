@@ -22,6 +22,14 @@ type RoomData = {
 };
 
 const rooms: Record<string, RoomData> = {};
+const LEETCODE_GRAPHQL_URL = "https://leetcode.com/graphql";
+
+interface QuestionData {
+  title: string;
+  content: string;
+  difficulty: string;
+  // Add other fields as needed
+}
 
 // Generate random 6-letter room code
 function generateRoomCode() {
@@ -42,8 +50,85 @@ function getUniqueRoomCode() {
   return roomCode;
 }
 
+async function fetchQuestionData(slug: string): Promise<QuestionData | null> {
+  const query = `
+        query getQuestionDetail($titleSlug: String!) {
+            question(titleSlug: $titleSlug) {
+                title
+                content
+                difficulty
+            }
+        }
+    `;
+
+  const variables = { titleSlug: slug };
+
+  try {
+    const options = {
+      method: "POST",
+      hostname: "leetcode.com",
+      path: "/graphql/",
+      headers: {
+        accept: "*/*",
+        "accept-language": "en-US,en;q=0.9",
+        "content-type": "application/json",
+      },
+      maxRedirects: 20,
+    };
+
+    const response = await fetch(LEETCODE_GRAPHQL_URL, {
+      method: options.method,
+      headers: options.headers,
+      body: JSON.stringify({
+        query,
+        variables,
+      }),
+    });
+    // console.log(response);
+
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+
+    const data = await response.json();
+    console.log(data)
+
+    const question = data.data.question;
+    if (question) {
+      return {
+        title: question.title,
+        content: question.content,
+        difficulty: question.difficulty,
+        // Map other fields as needed
+      };
+    } else {
+      return null;
+    }
+  } catch (error) {
+    console.error("Error fetching question data:", error);
+    return null;
+  }
+}
+
 app.get("/", (req: Request, res: Response) => {
   res.send("Server is running");
+});
+app.get("/rooms", (req: Request, res: Response) => {
+  res.json({
+    rooms: rooms,
+  });
+});
+
+app.post("/question", async (req: Request, res: Response) => {
+    console.log(req.body.slug)
+  const questionData = await fetchQuestionData(req.body.slug);
+  if (!questionData) {
+    res.json({
+      success: false,
+    });
+    return
+  }
+  res.json({ success: true, question: questionData });
 });
 
 io.on("connection", (socket) => {
@@ -57,7 +142,6 @@ io.on("connection", (socket) => {
     callback({ success: true, roomCode });
   });
 
-
   socket.on("join-room", (roomCode, callback) => {
     // Check if room exists
     if (!rooms[roomCode]) {
@@ -70,7 +154,7 @@ io.on("connection", (socket) => {
     if (room.users.length >= 2) {
       io.emit("room-full");
       callback({ success: false, error: "Room is full" });
-      return
+      return;
     }
     room.users.push(socket.id);
     if (room.currentController === null) room.currentController = socket.id;
@@ -92,7 +176,7 @@ io.on("connection", (socket) => {
     if (room.users.length >= 2) {
       io.emit("room-full");
       callback({ success: false, error: "Room is full" });
-      return
+      return;
     }
     // Remove user from room
     room.users = room.users.filter((id) => id !== socket.id);
