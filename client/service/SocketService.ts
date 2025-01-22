@@ -26,6 +26,7 @@ class SocketService {
     this.socket.on("error", (error: unknown) => {
       if (error instanceof Error) {
         console.error("Socket error:", error);
+        throw error;
       }
     });
 

@@ -2,6 +2,7 @@ import cors from "cors";
 import express, { Request, Response } from "express";
 import http from "http";
 import { Server } from "socket.io";
+import LCRouter, { QuestionData } from "./routes/LeetCodeRoutes";
 
 const app = express();
 const server = http.createServer(app);
@@ -24,20 +25,7 @@ type RoomData = {
 };
 
 const rooms: Record<string, RoomData> = {};
-const LEETCODE_GRAPHQL_URL = "https://leetcode.com/graphql";
 
-interface QuestionData {
-  frontendQuestionId: string;
-  title: string;
-  titleSlug: string;
-  difficulty: string;
-  content: string;
-  codeSnippets: Array<{
-    code: string;
-    lang: string;
-    langSlug: string;
-  }>;
-}
 
 // Generate random 6-letter room code
 function generateRoomCode() {
@@ -58,74 +46,7 @@ function getUniqueRoomCode() {
   return roomCode;
 }
 
-async function fetchQuestionData(slug: string): Promise<QuestionData | null> {
-  const query = `
-        query getQuestionDetail($titleSlug: String!) {
-            question(titleSlug: $titleSlug) {
-                frontendQuestionId: questionFrontendId
-                title
-                titleSlug
-                codeSnippets {
-                    code
-                    lang
-                    langSlug
-                }
-                content
-                difficulty
 
-            }
-        }
-    `;
-
-  const variables = { titleSlug: slug };
-
-  try {
-    const options = {
-      method: "POST",
-      hostname: "leetcode.com",
-      path: "/graphql/",
-      headers: {
-        accept: "*/*",
-        "accept-language": "en-US,en;q=0.9",
-        "content-type": "application/json",
-      },
-      maxRedirects: 20,
-    };
-
-    const response = await fetch(LEETCODE_GRAPHQL_URL, {
-      method: options.method,
-      headers: options.headers,
-      body: JSON.stringify({
-        query,
-        variables,
-      }),
-    });
-    // console.log(response);
-
-    if (!response.ok) {
-      throw new Error("Network response was not ok");
-    }
-
-    const data = await response.json();
-    const question = data.data.question;
-    if (question) {
-      return {
-        frontendQuestionId: question.frontendQuestionId,
-        title: question.title,
-        content: question.content,
-        difficulty: question.difficulty,
-        titleSlug: question.titleSlug,
-        codeSnippets: question.codeSnippets,
-        // Map other fields as needed
-      };
-    } else {
-      return null;
-    }
-  } catch (error) {
-    console.error("Error fetching question data:", error);
-    return null;
-  }
-}
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Server is running");
@@ -136,17 +57,7 @@ app.get("/rooms", (req: Request, res: Response) => {
   });
 });
 
-app.post("/question", async (req: Request, res: Response) => {
-  console.log(req.body.slug);
-  const questionData = await fetchQuestionData(req.body.slug);
-  if (!questionData) {
-    res.json({
-      success: false,
-    });
-    return;
-  }
-  res.json({ success: true, question: questionData });
-});
+
 
 io.on("connection", (socket) => {
   socket.on("create-room", (callback) => {
@@ -271,6 +182,8 @@ io.on("connection", (socket) => {
     }
   });
 });
+
+app.use('/leetcode',LCRouter)
 
 server.listen(4000, () =>
   console.log("Server is running on http://localhost:4000")

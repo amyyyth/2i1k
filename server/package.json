@@ -13,10 +13,14 @@
     "@types/express": "^5.0.0",
     "@types/node": "^22.10.7",
     "2i1k-server": "file:",
+    "axios": "^1.7.9",
+    "axios-cookiejar-support": "^5.0.5",
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "nanoid": "^5.0.9",
     "socket.io": "^4.8.1",
+    "tough": "^0.6.0",
+    "tough-cookie": "^5.1.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3"
   }

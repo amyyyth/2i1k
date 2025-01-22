@@ -41,21 +41,25 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <main>
-            <div className="flex items-center justify-between p-4 w-screen">
-              <Link href="/" className="flex items-center justify-center">
-                <div className="bg-gray-100 rounded-md">
-                  <Keyboard color="black" className="m-2" />
+            <div className="grid grid-rows-[3_1fr]">
+            <div>
+              <div className="flex items-center justify-between p-4 w-screen">
+                <Link href="/" className="flex items-center justify-center">
+                  <div className="bg-gray-100 rounded-md">
+                    <Keyboard color="black" className="m-2" />
+                  </div>
+                  <h1 className="text-xl font-bold pl-4">
+                    2 idiots, 1 keyboard
+                  </h1>
+                </Link>
+                <div className="flex items-center justify-center">
+                  <ModeToggle />
                 </div>
-                <h1 className="text-xl font-bold pl-4">2 idiots, 1 keyboard</h1>
-              </Link>
-              <div className="flex items-center justify-center">
-                <ModeToggle />
               </div>
+              <Separator />
             </div>
-            <Separator />
-            {/* <div className="flex items-center justify-start p-4 w-screen">
-              </div> */}
-            {children}
+            <div>{children}</div>
+            </div>
           </main>
         </ThemeProvider>
         <Toaster />

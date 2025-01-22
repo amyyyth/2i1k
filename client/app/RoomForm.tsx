@@ -2,9 +2,10 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import SocketService from "@/service/SocketService";
+import { ExternalLink } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useState } from "react";
 
 export const RoomForm = () => {
   const [roomCode, setRoomCode] = useState<string | null>(null);
@@ -14,35 +15,17 @@ export const RoomForm = () => {
 
   const router = useRouter();
 
-  useEffect(() => {
-    const socket = SocketService.getInstance().connect();
-
-    socket.on("user-joined", (userId) => {
-      console.log("User joined:", userId);
-    });
-
-    socket.on("user-left", (userId) => {
-      console.log("User left:", userId);
-    });
-
-    return () => {
-      //  removing this because the connection has to be there when routing
-      // rooms page
-      //   SocketService.getInstance().disconnect();
-    };
-  }, []);
-
   const handleJoinRoom = async (e: FormEvent) => {
     e.preventDefault();
     if (roomCode?.length !== 6) {
       setInputError(true);
       return;
     }
-    router.push(`/room/${roomCode}`)
+    router.push(`/room/${roomCode}`);
   };
 
   const handleCreateRoom = async () => {
-    router.push('room/new')
+    router.push("room/new");
   };
 
   return (
@@ -77,6 +60,9 @@ export const RoomForm = () => {
             <Button type="submit">Join</Button>
           </div>
         </form>
+            <Link href="/about">
+            <Button className="mt-10 underline" variant={"ghost"}>what's all this about? <ExternalLink /> </Button>
+            </Link>
       </div>
     </>
   );

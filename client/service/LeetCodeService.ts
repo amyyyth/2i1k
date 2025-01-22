@@ -30,7 +30,7 @@ export async function getLeetCodeQuestion(
     };
   }
   console.log(slug, "slug")
-  const response = await fetch(`${backendUri}/question`, {
+  const response = await fetch(`${backendUri}/leetcode/question`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
