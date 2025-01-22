@@ -28,10 +28,10 @@ import SocketService from "@/service/SocketService";
 import Editor from "@monaco-editor/react";
 import { LogOut, RefreshCcwDot, Send, SendHorizontal } from "lucide-react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 
-export const RoomPage = () => {
+const RoomPage = () => {
   const { roomCode } = useParams();
   type RoomData = {
     users: string[];
@@ -53,7 +53,6 @@ export const RoomPage = () => {
   const [language, setLanguage] = useState("python");
 
   const { toast } = useToast();
-  const router = useRouter();
 
   const setControl = (controllerId: string) => {
     if (SocketService.getInstance().getSocket().id === controllerId) {

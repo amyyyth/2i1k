@@ -3,7 +3,7 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-export const RoomPage = () => {
+const RoomPage = () => {
   const router = useRouter();
   useEffect(() => {
     router.push("/room/new");

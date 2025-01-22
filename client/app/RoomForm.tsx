@@ -1,7 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/hooks/use-toast";
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -11,7 +10,6 @@ export const RoomForm = () => {
   const [roomCode, setRoomCode] = useState<string | null>(null);
   const [inputError, setInputError] = useState(false);
 
-  const { toast } = useToast();
 
   const router = useRouter();
 
@@ -61,7 +59,7 @@ export const RoomForm = () => {
           </div>
         </form>
             <Link href="/about">
-            <Button className="mt-10 underline" variant={"ghost"}>what's all this about? <ExternalLink /> </Button>
+            <Button className="mt-10 underline" variant={"ghost"}>what&apos;s all this about? <ExternalLink /> </Button>
             </Link>
       </div>
     </>
