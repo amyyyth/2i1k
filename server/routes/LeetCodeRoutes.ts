@@ -96,7 +96,6 @@ LCRouter.post("/question", async (req: Request, res: Response) => {
     res.json({ success: false });
     return;
   }
-  console.log(req.body.slug);
   const questionData = await fetchQuestionData(req.body.slug);
   if (!questionData) {
     res.json({ success: false });
@@ -106,7 +105,7 @@ LCRouter.post("/question", async (req: Request, res: Response) => {
 });
 
 // --------------------------------------------------------------------------
-// SCRIPTING BELOW THIS POINT
+// SCRIPTING BELOW THIS POINT. WORK IN PROGRESS.
 
 interface RequestOptions extends AxiosRequestConfig {
   headers?: Record<string, string>;
