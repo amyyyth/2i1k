@@ -7,6 +7,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import Link from "next/link";
 import "./globals.css";
+import PhoneComponent from "./PhoneComponent";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -58,7 +59,8 @@ export default function RootLayout({
               </div>
               <Separator />
             </div>
-            <div>{children}</div>
+            <div className="hidden sm:block">{children}</div>
+            <div className="block sm:hidden"><PhoneComponent /></div>
             </div>
           </main>
         </ThemeProvider>

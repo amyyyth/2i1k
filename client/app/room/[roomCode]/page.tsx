@@ -10,6 +10,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -254,7 +259,7 @@ const RoomPage = () => {
 
   return (
     <>
-      <div className="flex flex-col max-h-screen h-full items-center justify-center">
+      <div className="flex flex-col max-h-screen h-screen items-center justify-center">
         {loading ? (
           <LoadingSpinner size={50} />
         ) : roomError ? (
@@ -332,18 +337,32 @@ const RoomPage = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <Link
-                    href={`https://www.leetcode.com/problems/${questionData?.titleSlug}/description/`}
-                    target="_blank"
-                  >
-                    <Button
-                      variant={"outline"}
-                      className="m-3 p-3"
-                    >
-                      <Send />
-                      Submit
-                    </Button>
-                  </Link>
+                  <HoverCard>
+                    <HoverCardTrigger className="cursor-pointer">
+                      <Button
+                        variant={"outline"}
+                        className="m-3 p-3"
+                        onClick={async () => {
+                          navigator.clipboard.writeText(content).then(() => {
+                            window.open(
+                              `https://www.leetcode.com/problems/${questionData?.titleSlug}/description/`,
+                              "_blank"
+                            );
+                          });
+                        }}
+                      >
+                        <Send />
+                        Submit
+                      </Button>
+                    </HoverCardTrigger>
+                    <HoverCardContent className="text-sm">
+                      Copies the code that you typed and opens the problem in LeetCode
+                      <br/>
+                      <Link href="/about" target="_blank" className="underline text-muted-foreground">
+                        know more
+                      </Link>
+                    </HoverCardContent>
+                  </HoverCard>
                 </div>
                 <div
                   onKeyUp={(e: React.KeyboardEvent<HTMLInputElement>) => {

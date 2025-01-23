@@ -21,7 +21,7 @@ const AboutPage = () => {
           <CardContent>
             <div className="flex flex-col p-4">
               <h4 className="text-5xl font-bold">What&apos;s this?</h4>
-              <p className="text-lg mt-4">
+              <p className="text-lg mt-3">
                 This website is a collaborative code editor that solve LeetCode
                 problems with your friend in real-time. You can create a room
                 and share the room code with your friend to start coding
@@ -30,18 +30,21 @@ const AboutPage = () => {
               </p>
               <Separator className="mt-4" />
               <p className="text-4xl font-bold mt-6">But there&apos;s a twist!</p>
-              <p className="text-lg mt-4">
+              <p className="text-lg mt-3">
                 Only one person can control the code editor at a time. The
                 control switches when the person in control presses a space, new
                 line, backspace or delete.
               </p>
               <Separator className="mt-6" />
               <p className="text-2xl font-bold mt-6">Submitting the code:</p>
-              <p className="text-lg mt-4">
-                I know it just opens the page now. LeetCode does not provide a public API, nor do they allow us to programmatically log in to their 
-                website to submit the code (they have strengthened their security against bots recently). Therefore, you will have to manually submit the code to LeetCode (I knowwww).
+              <p className="text-lg mt-3">
+                I know it just opens the page now.
+                LeetCode does not provide a public API, nor do they allow us to programmatically log in to their 
+                website to submit the code (they have strengthened their security against bots recently). 
+                Therefore, you will have to <b>manually submit the code</b> to LeetCode (I knowwww).
+                The best I could do was to copy the code that you typed into the clipboard.
                 There is a workaround that requires you to get the session cookie from LeetCode after you login and
-                use that to submit the code here. But I don&apos;t feel that it is ethical nor ideal to do so (Aaand I am lazy ofc).
+                use that to submit the code here. But I don&apos;t feel that it is ethical nor ideal to do so (Aaand <em>I am lazy</em> ofc).
                 Maybe in the future I will implement it. Fingers crossed.
               </p>
               
