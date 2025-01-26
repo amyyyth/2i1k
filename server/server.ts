@@ -8,7 +8,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "https://2i1k.fun", // Allow requests from your frontend
+    origin: "http://localhost:3001", // Allow requests from your frontend
     methods: ["GET", "POST"],
   },
 });

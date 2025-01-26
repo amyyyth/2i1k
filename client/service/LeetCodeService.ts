@@ -1,5 +1,5 @@
 
-const backendUri = process.env.BACKEND_URI
+const backendUri = process.env.NEXT_PUBLIC_BACKEND_URI
 
 export interface QuestionData {
   frontendQuestionId: string;
