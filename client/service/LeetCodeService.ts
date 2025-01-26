@@ -1,4 +1,5 @@
-import { backendUri } from "@/config";
+
+const backendUri = process.env.BACKEND_URI
 
 export interface QuestionData {
   frontendQuestionId: string;
