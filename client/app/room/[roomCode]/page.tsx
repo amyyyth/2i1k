@@ -70,6 +70,7 @@ const RoomPage = () => {
   };
 
   useEffect(() => {
+    console.log(process.env.NEXT_PUBLIC_BACKEND_URI)
     try {
       const socket = SocketService.getInstance().connect();
       if (!roomCode || roomCode === "new") {

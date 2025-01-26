@@ -17,7 +17,8 @@ class SocketService {
   }
 
   connect() {
-    this.socket = io("http://localhost:4000");
+    console.log(process.env.NEXT_PUBLIC_BACKEND_URI)
+    this.socket = io(process.env.NEXT_PUBLIC_BACKEND_URI);
 
     this.socket.on("connect", () => {
       console.log("Connected to server");
