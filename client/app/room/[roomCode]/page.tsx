@@ -32,9 +32,10 @@ import { getLeetCodeQuestion, QuestionData } from "@/service/LeetCodeService";
 import SocketService from "@/service/SocketService";
 import Editor from "@monaco-editor/react";
 import { LogOut, RefreshCcwDot, Send, SendHorizontal } from "lucide-react";
+import type { editor } from "monaco-editor";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 
 const RoomPage = () => {
   const { roomCode } = useParams();
@@ -56,6 +57,9 @@ const RoomPage = () => {
   const [showQuestionDialog, setShowQuestionDialog] = useState(false);
   const [fetchingQuestion, setFetchingQuestion] = useState(false);
   const [language, setLanguage] = useState("python");
+  const router = useRouter();
+
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
 
   const { toast } = useToast();
 
@@ -70,7 +74,7 @@ const RoomPage = () => {
   };
 
   useEffect(() => {
-    console.log(process.env.NEXT_PUBLIC_BACKEND_URI)
+    console.log(process.env.NEXT_PUBLIC_BACKEND_URI);
     try {
       const socket = SocketService.getInstance().connect();
       if (!roomCode || roomCode === "new") {
@@ -140,6 +144,20 @@ const RoomPage = () => {
 
       socket.on("control-update", (controllerId: string) => {
         setControl(controllerId);
+        // Move cursor to the end of the text
+        if (editorRef.current && editorRef.current.getModel()) {
+          const model = editorRef.current.getModel();
+          console.log(model)
+          if (model) {
+            const lastLineNumber = model.getLineCount();
+            const lastLineLength = model.getLineLength(lastLineNumber);
+
+            editorRef.current.setPosition({
+              lineNumber: lastLineNumber,
+              column: lastLineLength + 1,
+            });
+          }
+        }
       });
 
       socket.on("update-content", (content: string) => {
@@ -357,9 +375,14 @@ const RoomPage = () => {
                       </Button>
                     </HoverCardTrigger>
                     <HoverCardContent className="text-sm">
-                      Copies the code that you typed and opens the problem in LeetCode
-                      <br/>
-                      <Link href="/about" target="_blank" className="underline text-muted-foreground">
+                      Copies the code that you typed and opens the problem in
+                      LeetCode
+                      <br />
+                      <Link
+                        href="/about"
+                        target="_blank"
+                        className="underline text-muted-foreground"
+                      >
                         know more
                       </Link>
                     </HoverCardContent>
@@ -378,6 +401,9 @@ const RoomPage = () => {
                         ? "python"
                         : language
                     }
+                    onMount={(editor: editor.IStandaloneCodeEditor) => {
+                      editorRef.current = editor;
+                    }}
                     theme="vs-dark"
                     value={content}
                     options={{
@@ -401,6 +427,9 @@ const RoomPage = () => {
           onOpenChange={(open) => {
             if (!open && questionData) {
               setShowQuestionDialog(open);
+            }
+            else if(!questionData){
+                router.replace('/')
             }
           }}
         >
